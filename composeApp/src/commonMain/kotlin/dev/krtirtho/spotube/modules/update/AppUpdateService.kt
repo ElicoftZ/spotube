@@ -17,8 +17,6 @@
 
 package dev.krtirtho.spotube.modules.update
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import dev.krtirtho.spotube.AppBuildInfo
 import dev.krtirtho.spotube.modules.settings.SettingsRepository
@@ -30,6 +28,9 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,27 +39,35 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import net.swiftzer.semver.SemVer
+import org.koin.core.component.KoinComponent
 
-data class AvailableUpdate(
+data class AvailableAppUpdate(
     val tag: String,
     val releaseNotesMarkdown: String,
 )
 
-class UpdateCheckerViewModel(
+/**
+ * Checks GitHub for a newer app release once on startup and exposes it for the UI to
+ * surface via [dev.krtirtho.spotube.modules.update.AppUpdateDialog]. This is an
+ * app-scoped singleton (not a ViewModel) since the check runs once for the whole
+ * process, independent of any screen's lifecycle.
+ */
+class AppUpdateService(
     private val settingsRepository: SettingsRepository,
-) : ViewModel() {
-    private val logger = Logger.withTag("UpdateChecker")
+) : KoinComponent, AutoCloseable {
+    private val logger = Logger.withTag("AppUpdateService")
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val httpClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
     }
 
-    private val _availableUpdate = MutableStateFlow<AvailableUpdate?>(null)
-    val availableUpdate: StateFlow<AvailableUpdate?> = _availableUpdate.asStateFlow()
+    private val _availableUpdate = MutableStateFlow<AvailableAppUpdate?>(null)
+    val availableUpdate: StateFlow<AvailableAppUpdate?> = _availableUpdate.asStateFlow()
 
     init {
-        viewModelScope.launch {
+        scope.launch {
             checkForUpdate()
         }
     }
@@ -80,8 +89,8 @@ class UpdateCheckerViewModel(
             val currentVersion = parseVersion(AppBuildInfo.VERSION)
                 ?: return logger.w { "Ignoring update check for invalid app version: ${AppBuildInfo.VERSION}" }
 
-            if (latestVersion > currentVersion && release.tagName != settings.ignoredUpdateVersion) {
-                _availableUpdate.value = AvailableUpdate(
+            if (latestVersion > currentVersion && release.tagName != settings.ignoredAppUpdateVersion) {
+                _availableUpdate.value = AvailableAppUpdate(
                     tag = release.tagName,
                     releaseNotesMarkdown = release.body.orEmpty(),
                 )
@@ -94,10 +103,10 @@ class UpdateCheckerViewModel(
     fun ignoreUpdate() {
         val update = _availableUpdate.value ?: return
         _availableUpdate.value = null
-        viewModelScope.launch {
+        scope.launch {
             runCatching {
                 val settings = settingsRepository.getCurrentSettings()
-                settingsRepository.updateSettings(settings.copy(ignoredUpdateVersion = update.tag))
+                settingsRepository.updateSettings(settings.copy(ignoredAppUpdateVersion = update.tag))
             }.onFailure { e ->
                 logger.e(e) { "Failed to persist ignored app version" }
             }
@@ -112,7 +121,7 @@ class UpdateCheckerViewModel(
         SemVer.parse(version)
     }.getOrNull()
 
-    override fun onCleared() {
+    override fun close() {
         httpClient.close()
     }
 }

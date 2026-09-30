@@ -22,30 +22,20 @@ import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.ui.NavDisplay
-import com.mikepenz.markdown.m3.Markdown
 import dev.krtirtho.spotube.core.navigation.Navigator
 import dev.krtirtho.spotube.core.navigation.Routes
 import dev.krtirtho.spotube.core.navigation.TOP_LEVEL_ROUTES
 import dev.krtirtho.spotube.core.navigation.rememberNavigationState
 import dev.krtirtho.spotube.core.navigation.toEntries
 import dev.krtirtho.spotube.core.ui.base.LocalBaseUITheme
-import dev.krtirtho.spotube.core.ui.base.OutlineButton
-import dev.krtirtho.spotube.core.ui.base.PrimaryButton
-import dev.krtirtho.spotube.core.ui.base.ThemedDialog
 import dev.krtirtho.spotube.core.ui.base.rememberBaseUITheme
 import dev.krtirtho.spotube.core.ui.component.LocalSharedTransitionScope
 import dev.krtirtho.spotube.core.ui.theming.SpotubeTheme
@@ -53,7 +43,10 @@ import dev.krtirtho.spotube.modules.library.LibraryTab
 import dev.krtirtho.spotube.modules.settings.SettingsRepository
 import dev.krtirtho.spotube.modules.settings.UserSettings
 import dev.krtirtho.spotube.modules.shell.AppShell
-import dev.krtirtho.spotube.modules.update.UpdateCheckerViewModel
+import dev.krtirtho.spotube.modules.update.AppUpdateDialog
+import dev.krtirtho.spotube.modules.update.AppUpdateService
+import dev.krtirtho.spotube.modules.update.PluginUpdateDialog
+import dev.krtirtho.spotube.modules.update.PluginUpdateService
 import dev.krtirtho.spotube.modules.webview.WebViewScreen
 import dev.krtirtho.spotube.resources.iconsax.Iconsax
 import dev.krtirtho.spotube.resources.iconsax.IconsaxCd
@@ -69,7 +62,6 @@ import dev.krtirtho.spotube.resources.iconsax.User
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.compose.koinInject
 import org.koin.compose.navigation3.koinEntryProvider
-import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
 interface NavigationItem {
@@ -143,8 +135,10 @@ fun App(
 ) {
     val settingsRepository: SettingsRepository = koinInject<SettingsRepository>()
     val userSettings by settingsRepository.userSettings.collectAsStateWithLifecycle(initialValue = UserSettings())
-    val updateCheckerViewModel: UpdateCheckerViewModel = koinViewModel()
-    val availableUpdate by updateCheckerViewModel.availableUpdate.collectAsStateWithLifecycle()
+    val appUpdateService: AppUpdateService = koinInject()
+    val pluginUpdateService: PluginUpdateService = koinInject()
+    val availableAppUpdate by appUpdateService.availableUpdate.collectAsStateWithLifecycle()
+    val availablePluginUpdate by pluginUpdateService.availableUpdate.collectAsStateWithLifecycle()
 
     val navigationState = rememberNavigationState(
         startRoute = Routes.Home, topLevelRoutes = TOP_LEVEL_ROUTES
@@ -182,42 +176,27 @@ fun App(
                 }
             }
             content()
-            if (availableUpdate != null) {
-                val update = availableUpdate!!
-                ThemedDialog(
-                    onDismissRequest = updateCheckerViewModel::dismissUpdate,
-                    title = {
-                        Text(
-                            text = "Spotube ${update.tag} is available",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                        )
+            availableAppUpdate?.let { update ->
+                AppUpdateDialog(
+                    update = update,
+                    onDismiss = appUpdateService::dismissUpdate,
+                    onIgnore = appUpdateService::ignoreUpdate,
+                    onUpdate = {
+                        runCatching { openUrlInBrowser("https://spotube.cc/downloads/") }
+                        appUpdateService.dismissUpdate()
                     },
-                    actions = {
-                        OutlineButton(onClick = updateCheckerViewModel::ignoreUpdate) {
-                            Text("Ignore")
-                        }
-                        PrimaryButton(
-                            onClick = {
-                                runCatching { openUrlInBrowser("https://spotube.cc/downloads/") }
-                                updateCheckerViewModel.dismissUpdate()
-                            },
-                        ) {
-                            Text("Update")
-                        }
+                )
+            }
+            availablePluginUpdate?.let { update ->
+                PluginUpdateDialog(
+                    update = update,
+                    onDismiss = pluginUpdateService::dismissUpdate,
+                    onIgnore = pluginUpdateService::ignoreUpdate,
+                    onUpdate = {
+                        runCatching { openUrlInBrowser(update.info.directDownloadUrl) }
+                        pluginUpdateService.dismissUpdate()
                     },
-                ) {
-                    if (update.releaseNotesMarkdown.isNotBlank()) {
-                        SelectionContainer {
-                            Markdown(
-                                content = update.releaseNotesMarkdown,
-                                modifier = Modifier.padding(bottom = 8.dp),
-                            )
-                        }
-                    } else {
-                        Text("See what's new in this release on the Spotube downloads page.")
-                    }
-                }
+                )
             }
         }
     }
