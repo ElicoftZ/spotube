@@ -9,10 +9,13 @@ import kotlin.time.Duration
 class FakeAudioPlayer : AudioPlayerInterface {
     private val _playlistFlow = MutableStateFlow<List<MediaItem>>(emptyList())
     override val playlistFlow: StateFlow<List<MediaItem>> = _playlistFlow.asStateFlow()
-    override val durationFlow: StateFlow<Duration>
-        get() = TODO("Not yet implemented")
-    override val positionFlow: StateFlow<Duration>
-        get() = TODO("Not yet implemented")
+
+    private val _durationFlow = MutableStateFlow(Duration.ZERO)
+    override val durationFlow: StateFlow<Duration> = _durationFlow.asStateFlow()
+
+    private val _positionFlow = MutableStateFlow(Duration.ZERO)
+    override val positionFlow: StateFlow<Duration> = _positionFlow.asStateFlow()
+
     override val bufferingPositionFlow: StateFlow<Duration>
         get() = TODO("Not yet implemented")
 
@@ -152,8 +155,8 @@ class FakeAudioPlayer : AudioPlayerInterface {
         _currentMediaItemFlow.value = _playlistFlow.value.getOrNull(index)
     }
 
-    override val playerStateFlow: StateFlow<PlayerState>
-        get() = TODO("Not yet implemented")
+    private val _playerStateFlow = MutableStateFlow(PlayerState.IDLE)
+    override val playerStateFlow: StateFlow<PlayerState> = _playerStateFlow.asStateFlow()
 
     fun setPlaylist(items: List<MediaItem>) {
         _playlistFlow.value = items
@@ -165,6 +168,18 @@ class FakeAudioPlayer : AudioPlayerInterface {
 
     fun setLoopState(state: LoopState) {
         _loopStateFlow.value = state
+    }
+
+    fun setPlayerState(state: PlayerState) {
+        _playerStateFlow.value = state
+    }
+
+    fun setPosition(position: Duration) {
+        _positionFlow.value = position
+    }
+
+    fun setDuration(duration: Duration) {
+        _durationFlow.value = duration
     }
 
     fun resetCallCounts() {

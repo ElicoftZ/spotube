@@ -76,11 +76,18 @@ interface AudioPluginSource {
     val selectedAudioPlugin: StateFlow<PluginService?>
 }
 
+/** Narrow read-only view of the active scrobble plugin, used by consumers that only need
+ * to submit scrobbles against the currently selected plugin without depending on the full
+ * [PluginManager] (which also owns plugin installation/lifecycle machinery). */
+interface ScrobblePluginSource {
+    val selectedScrobblePlugin: StateFlow<PluginService?>
+}
+
 
 class PluginManager(
     val database: Database,
     val paths: Paths,
-) : KoinComponent, PluginProvider, AudioPluginSource {
+) : KoinComponent, PluginProvider, AudioPluginSource, ScrobblePluginSource {
     private val logger by injectLogger<PluginManager>()
     private val pluginExceptionHandler = CoroutineExceptionHandler { _, exception ->
         logger.e(exception) { "Plugin runtime threw an unhandled exception. Intercepted safely." }
@@ -116,7 +123,6 @@ class PluginManager(
             val json = p[DatabaseKeys.PLUGINS_STATE_KEY]
             val defaultSelectedPlugins = mapOf(
                 PluginAbility.AUDIO to NEWPIPE_YOUTUBE_BUILT_IN_PLUGIN,
-                PluginAbility.SCROBBLE to LRCLIB_BUILT_IN_PLUGIN,
             )
             if (json == null) {
                 PluginManagerStates.Data(
@@ -136,11 +142,21 @@ class PluginManager(
                         } else it
                     }.toSet()
 
-                    res.copy(
-                        plugins = (plugins union BUILT_IN_PLUGINS).toList(),
-                        selectedPlugins = res.selectedPlugins.ifEmpty {
-                            defaultSelectedPlugins
+                    val resolvedPlugins = (plugins union BUILT_IN_PLUGINS).toList()
+                    val resolvedPluginsById = resolvedPlugins.associateBy { it.id }
+                    // Drop selections for plugins that don't actually declare the ability
+                    // (e.g. a scrobble selection left over from a removed built-in plugin)
+                    // and always point selections at the resolved plugin entry.
+                    val selectedPlugins = res.selectedPlugins.ifEmpty { defaultSelectedPlugins }
+                        .mapNotNull { (ability, selected) ->
+                            val plugin = resolvedPluginsById[selected.id] ?: return@mapNotNull null
+                            if (ability in plugin.abilities) ability to plugin else null
                         }
+                        .toMap()
+
+                    res.copy(
+                        plugins = resolvedPlugins,
+                        selectedPlugins = selectedPlugins,
                     )
                 } catch (_: Exception) {
                     PluginManagerStates.Data(
@@ -256,7 +272,7 @@ class PluginManager(
         filterSelectedPluginByType(PluginAbility.AUDIO)
     val selectedLyricsPlugin =
         filterSelectedPluginByType(PluginAbility.LYRICS)
-    val selectedScrobblePlugin =
+    override val selectedScrobblePlugin =
         filterSelectedPluginByType(PluginAbility.SCROBBLE)
 
 

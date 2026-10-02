@@ -32,6 +32,7 @@ import dev.krtirtho.spotube.core.remote.RemoteControlClient
 import dev.krtirtho.spotube.core.remote.RemoteControlHandler
 import dev.krtirtho.spotube.core.remote.RemoteControlService
 import dev.krtirtho.spotube.core.remote.RemotePlaybackController
+import dev.krtirtho.spotube.core.scrobble.ScrobbleManager
 import dev.krtirtho.spotube.core.playback.CollectionPlaybackHelper
 import dev.krtirtho.spotube.core.server.AlternativeTracksRepository
 import dev.krtirtho.spotube.core.server.CacheManager
@@ -69,6 +70,7 @@ import dev.krtirtho.spotube.modules.plugin.AudioPluginSource
 import dev.krtirtho.spotube.modules.plugin.PluginManager
 import dev.krtirtho.spotube.modules.plugin.PluginProvider
 import dev.krtirtho.spotube.modules.plugin.PluginViewModel
+import dev.krtirtho.spotube.modules.plugin.ScrobblePluginSource
 import dev.krtirtho.spotube.modules.saved_tracks.SavedTracksRepository
 import dev.krtirtho.spotube.modules.saved_tracks.SavedTracksViewModel
 import dev.krtirtho.spotube.modules.search.SearchRepository
@@ -130,6 +132,7 @@ val sharedModules = module {
     singleOf(::PluginManager) {
         bind<PluginProvider>()
         bind<AudioPluginSource>()
+        bind<ScrobblePluginSource>()
     }
     viewModelOf(::PluginViewModel)
 
@@ -267,6 +270,9 @@ val sharedModules = module {
     }
 
     single { DiscordRpcService(get(), get()) } withOptions { createdAtStart() }
+
+    // Scrobbling
+    single { ScrobbleManager(get(), get(), get()) } withOptions { createdAtStart() }
 
     factory { (tag: String?) ->
         if (tag != null) {
