@@ -215,7 +215,6 @@ fun PlatformWebViewScreen(webViewController: WebViewController) {
             webViewJsBridge = webViewBridge,
             onCreated = { webView ->
                 navigator.evaluateJavaScript(bridgeBootstrapScript)
-
             },
         )
     }

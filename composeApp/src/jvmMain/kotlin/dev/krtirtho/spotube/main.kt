@@ -58,52 +58,9 @@ private object KoinServicesProvider : KoinComponent {
     val settingsProvider: SettingsProvider get() = get()
 }
 
-private interface LibC : Library {
-    fun setenv(name: String, value: String, overwrite: Int): Int
-
-    companion object {
-        val INSTANCE: LibC = Native.load("c", LibC::class.java)
-    }
-}
-
-/**
- * WebKitGTK is only used on Linux (Windows = WebView2, macOS = WKWebView).
- * The webview is created *after* the window is already mapped and the Tao
- * render/swap loop is running. WebKitGTK's accelerated-compositing path then
- * initialises its own GL context in-process, racing Tao's swap thread on the
- * same Mesa display, which deterministically segfaults `libgallium` on the
- * next Compose flush. Disabling WebKit's hardware-accelerated compositing
- * (and its DMABUF renderer) removes that GL context entirely — login pages
- * render fine in software. Must run before libwebkit2gtk is loaded.
- */
-private fun disableWebKitGpuCompositing() {
-    if (!System.getProperty("os.name").lowercase().contains("linux")) return
-    LibC.INSTANCE.setenv("WEBKIT_DISABLE_COMPOSITING_MODE", "1", 1)
-    LibC.INSTANCE.setenv("WEBKIT_DISABLE_DMABUF_RENDERER", "1", 1)
-}
-
-/**
- * Routes `spotube://` deep links into [ExternalUriHandler].
- * macOS delivers them through the open-URI handler; on Linux/Windows they arrive
- * as command line arguments (scheme registration is handled by the distribution
- * packaging, e.g. the `.desktop` file's `Exec %u`).
- */
-private fun handleStartupDeepLinks(args: Array<String>) {
-    runCatching {
-        if (java.awt.Desktop.isDesktopSupported()) {
-            java.awt.Desktop.getDesktop().setOpenURIHandler { event ->
-                ExternalUriHandler.onNewUri(event.uri.toString())
-            }
-        }
-    }
-    args.firstOrNull { it.startsWith("spotube:", ignoreCase = true) }
-        ?.let(ExternalUriHandler::onNewUri)
-}
 
 @OptIn(ExperimentalComposeUiApi::class)
-fun main(args: Array<String>) {
-    disableWebKitGpuCompositing()
-    handleStartupDeepLinks(args)
+fun main() {
     FileKit.init(appId = "dev.krtirtho.spotube")
     initKoin()
     NewPipeDownloader.init(KoinPathsProvider.paths)
