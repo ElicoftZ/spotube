@@ -31,6 +31,8 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -59,6 +61,7 @@ actual fun ApplicationMainBar(
     subtitle: @Composable () -> Unit,
     actions: @Composable (RowScope.() -> Unit),
     backButton: Boolean,
+    transparent: Boolean,
 ) {
     Box(
         modifier = Modifier.fillMaxWidth()
@@ -75,6 +78,14 @@ actual fun ApplicationMainBar(
                 }
             },
             subtitle = subtitle,
+            colors = if (transparent) {
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent,
+                )
+            } else {
+                TopAppBarDefaults.topAppBarColors()
+            },
             modifier = Modifier.padding(end = 125.dp) // To avoid overlap with window buttons
         )
         LocalWindowScope.current.WindowControls(

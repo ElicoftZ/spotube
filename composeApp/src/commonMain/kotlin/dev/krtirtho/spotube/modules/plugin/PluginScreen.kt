@@ -102,6 +102,14 @@ import okio.Path
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import spotube.composeapp.generated.resources.Res
+import spotube.composeapp.generated.resources.welcome_plugins_title
+import spotube.composeapp.generated.resources.welcome_plugins_setup_guide
+import spotube.composeapp.generated.resources.welcome_plugins_discover
+import spotube.composeapp.generated.resources.welcome_plugins_retry
+import spotube.composeapp.generated.resources.welcome_plugins_more
+import spotube.composeapp.generated.resources.welcome_plugins_discovery_empty
+import spotube.composeapp.generated.resources.welcome_plugins_discovery_error
+import spotube.composeapp.generated.resources.welcome_plugins_sources
 import spotube.composeapp.generated.resources.plugin_action_download
 import spotube.composeapp.generated.resources.plugin_action_install_from_file
 import spotube.composeapp.generated.resources.plugin_configure_title
@@ -138,6 +146,7 @@ private val VERIFIED_PLUGIN_OWNERS = setOf<String>()
 @Composable
 fun PluginScreen(
     viewModel: PluginViewModel = koinViewModel(),
+    onboarding: Boolean = false,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val shellBottomInset = LocalAppShellBottomInset.current
@@ -215,8 +224,11 @@ fun PluginScreen(
 
     Scaffold(
         topBar = {
-            ApplicationMainBar(title = { Text(stringResource(Res.string.plugin_screen_title)) })
-        }
+            if (!onboarding) {
+                ApplicationMainBar(title = { Text(stringResource(Res.string.plugin_screen_title)) })
+            }
+        },
+        containerColor = if (onboarding) Color.Transparent else MaterialTheme.colorScheme.surface,
     ) { innerPadding ->
         when (val data = uiState) {
             is PluginUiState.Loading -> {
@@ -244,114 +256,75 @@ fun PluginScreen(
                         ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        item {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 4.dp, vertical = 4.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    stringResource(Res.string.plugin_configure_title),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                PrimaryButton(onClick = { viewModel.showInstallSheet() }) {
-                                    Icon(
-                                        Iconsax.IconsaxAdd,
-                                        contentDescription = "Install a plugin",
+                        if (onboarding) {
+                            item {
+                                Column(
+                                    modifier = Modifier.padding(
+                                        horizontal = 4.dp,
+                                        vertical = 16.dp
+                                    ),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Text(
+                                        stringResource(Res.string.welcome_plugins_title),
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        fontWeight = FontWeight.SemiBold,
                                     )
-                                    Text(stringResource(Res.string.plugin_install_section_title))
+                                    Text(
+                                        stringResource(Res.string.welcome_plugins_setup_guide),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                            item {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                ) {
+                                    OutlineButton(onClick = { viewModel.showOnboardingDiscovery(true) }) {
+                                        Text(
+                                            stringResource(Res.string.welcome_plugins_discover),
+                                            fontWeight = if (data.onboardingDiscover) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    }
+                                    OutlineButton(onClick = {
+                                        viewModel.showOnboardingDiscovery(
+                                            false
+                                        )
+                                    }) {
+                                        Text(
+                                            stringResource(Res.string.welcome_plugins_sources),
+                                            fontWeight = if (!data.onboardingDiscover) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    }
                                 }
                             }
                         }
-
-                        item {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                            ) {
-                                Column(
+                        if (!onboarding || !data.onboardingDiscover) {
+                            item {
+                                Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 4.dp, bottom = 4.dp)
+                                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    data.abilitySelections.forEachIndexed { index, selection ->
-                                        if (index > 0) {
-                                            HorizontalDivider(
-                                                color = MaterialTheme.colorScheme.outlineVariant.copy(
-                                                    alpha = 0.5f
-                                                ),
-                                            )
-                                        }
-                                        DefaultAbilityPluginSelector(
-                                            selection = selection,
-                                            onSelected = { plugin ->
-                                                viewModel.selectPlugin(selection.ability, plugin)
-                                            },
+                                    Text(
+                                        stringResource(Res.string.plugin_configure_title),
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    PrimaryButton(onClick = { viewModel.showInstallSheet() }) {
+                                        Icon(
+                                            Iconsax.IconsaxAdd,
+                                            contentDescription = stringResource(Res.string.plugin_install_section_title),
                                         )
+                                        Text(stringResource(Res.string.plugin_install_section_title))
                                     }
                                 }
                             }
-                        }
 
-                        if (data.plugins.isEmpty()) {
-                            item {
-                                Box(
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        Surface(
-                                            modifier = Modifier.size(72.dp)
-                                                .clip(RoundedCornerShape(18.dp)),
-                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                        ) {
-                                            Box(contentAlignment = Alignment.Center) {
-                                                Icon(
-                                                    Iconsax.IconsaxBox,
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(32.dp),
-                                                    tint = MaterialTheme.colorScheme.primary
-                                                )
-                                            }
-                                        }
-                                        Text(
-                                            stringResource(Res.string.plugin_empty_title),
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Text(
-                                            stringResource(Res.string.plugin_empty_subtitle),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                        } else {
-                            item {
-                                val noun = if (data.plugins.size == 1) {
-                                    stringResource(Res.string.plugin_installed_singular)
-                                } else {
-                                    stringResource(Res.string.plugin_installed_plural)
-                                }
-                                Text(
-                                    stringResource(
-                                        Res.string.plugin_installed_count,
-                                        data.plugins.size,
-                                        noun
-                                    ),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
-                                )
-                            }
                             item {
                                 Card(
                                     modifier = Modifier
@@ -359,9 +332,11 @@ fun PluginScreen(
                                         .padding(vertical = 4.dp),
                                 ) {
                                     Column(
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 4.dp, bottom = 4.dp)
                                     ) {
-                                        data.plugins.forEachIndexed { index, item ->
+                                        data.abilitySelections.forEachIndexed { index, selection ->
                                             if (index > 0) {
                                                 HorizontalDivider(
                                                     color = MaterialTheme.colorScheme.outlineVariant.copy(
@@ -369,30 +344,128 @@ fun PluginScreen(
                                                     ),
                                                 )
                                             }
-                                            PluginCard(
-                                                plugin = item.plugin,
-                                                isSelected = item.isSelected,
-                                                onRemove = { viewModel.removePlugin(item.plugin) },
-                                                isLoggedIn = item.authState.isLoggedIn,
-                                                logoPath = item.logoPath,
-                                                onInfo = { viewModel.showPluginInfo(item.plugin) },
-                                                onSupport = if (item.isSelected) {
-                                                    { viewModel.loadSupport(item.plugin) }
-                                                } else null,
-                                                onLogin = if (item.isSelected && item.authState.requiresAuth) {
-                                                    { viewModel.login(item.plugin) }
-                                                } else null,
-                                                onLogout = if (item.isSelected && item.authState.requiresAuth) {
-                                                    { viewModel.logout(item.plugin) }
-                                                } else null,
+                                            DefaultAbilityPluginSelector(
+                                                selection = selection,
+                                                onSelected = { plugin ->
+                                                    viewModel.selectPlugin(
+                                                        selection.ability,
+                                                        plugin
+                                                    )
+                                                },
                                             )
                                         }
                                     }
                                 }
                             }
-                        }
 
-                        if (data.discover.isLoading || data.discover.repos.isNotEmpty()) {
+                            if (data.plugins.isEmpty()) {
+                                item {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth()
+                                            .padding(vertical = 48.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            Surface(
+                                                modifier = Modifier.size(72.dp)
+                                                    .clip(RoundedCornerShape(18.dp)),
+                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Icon(
+                                                        Iconsax.IconsaxBox,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(32.dp),
+                                                        tint = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                            }
+                                            Text(
+                                                stringResource(Res.string.plugin_empty_title),
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                            Text(
+                                                stringResource(Res.string.plugin_empty_subtitle),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                item {
+                                    val noun = if (data.plugins.size == 1) {
+                                        stringResource(Res.string.plugin_installed_singular)
+                                    } else {
+                                        stringResource(Res.string.plugin_installed_plural)
+                                    }
+                                    Text(
+                                        stringResource(
+                                            Res.string.plugin_installed_count,
+                                            data.plugins.size,
+                                            noun
+                                        ),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(
+                                            horizontal = 4.dp,
+                                            vertical = 4.dp
+                                        )
+                                    )
+                                }
+                                item {
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            data.plugins.forEachIndexed { index, item ->
+                                                if (index > 0) {
+                                                    HorizontalDivider(
+                                                        color = MaterialTheme.colorScheme.outlineVariant.copy(
+                                                            alpha = 0.5f
+                                                        ),
+                                                    )
+                                                }
+                                                PluginCard(
+                                                    plugin = item.plugin,
+                                                    isSelected = item.isSelected,
+                                                    onRemove = { viewModel.removePlugin(item.plugin) },
+                                                    isLoggedIn = item.authState.isLoggedIn,
+                                                    logoPath = item.logoPath,
+                                                    onInfo = { viewModel.showPluginInfo(item.plugin) },
+                                                    onSupport = if (item.isSelected) {
+                                                        { viewModel.loadSupport(item.plugin) }
+                                                    } else null,
+                                                    onLogin = if (item.isSelected && item.authState.requiresAuth) {
+                                                        { viewModel.login(item.plugin) }
+                                                    } else null,
+                                                    onLogout = if (item.isSelected && item.authState.requiresAuth) {
+                                                        { viewModel.logout(item.plugin) }
+                                                    } else null,
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                        if ((!onboarding || data.onboardingDiscover) && (onboarding || data.discover.isLoading || data.discover.repos.isNotEmpty() || data.discover.error != null)) {
+                            if (onboarding) {
+                                item {
+                                    OutlineButton(onClick = viewModel::showInstallSheet) {
+                                        Text(stringResource(Res.string.plugin_install_section_title))
+                                    }
+                                }
+                            }
                             item {
                                 Row(
                                     modifier = Modifier
@@ -408,9 +481,28 @@ fun PluginScreen(
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        "Discover Plugins",
+                                        stringResource(Res.string.welcome_plugins_discover),
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                            if (data.discover.isLoading) {
+                                item {
+                                    Box(
+                                        Modifier.fillMaxWidth().padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(Modifier.size(24.dp))
+                                    }
+                                }
+                            }
+                            if (onboarding && data.discover.isInitialLoaded && !data.discover.isLoading && data.discover.repos.isEmpty() && data.discover.error == null) {
+                                item {
+                                    Text(
+                                        stringResource(Res.string.welcome_plugins_discovery_empty),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(12.dp)
                                     )
                                 }
                             }
@@ -440,15 +532,27 @@ fun PluginScreen(
 
                             data.discover.error?.let { error ->
                                 item {
-                                    Text(
-                                        error,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.padding(
-                                            horizontal = 4.dp,
-                                            vertical = 8.dp
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        Text(
+                                            stringResource(Res.string.welcome_plugins_discovery_error),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.padding(
+                                                horizontal = 4.dp,
+                                                vertical = 8.dp
+                                            )
                                         )
-                                    )
+                                        OutlineButton(onClick = viewModel::retryDiscovery) {
+                                            Text(stringResource(Res.string.welcome_plugins_retry))
+                                        }
+                                    }
+                                }
+                            }
+                            if (onboarding && data.discover.hasMore && !data.discover.isLoading && !data.discover.isLoadingMore && data.discover.error == null) {
+                                item {
+                                    OutlineButton(onClick = viewModel::loadNextDiscoverPage) {
+                                        Text(stringResource(Res.string.welcome_plugins_more))
+                                    }
                                 }
                             }
                         }
@@ -468,8 +572,8 @@ fun PluginScreen(
                     // Pagination trigger stays in the composable because it is driven by
                     // LazyList layout information, which only exists in UI scope.
                     // The actual loading call is forwarded to the ViewModel.
-                    LaunchedEffect(shouldLoadMore.value) {
-                        if (shouldLoadMore.value) {
+                    LaunchedEffect(shouldLoadMore.value, onboarding) {
+                        if (!onboarding && shouldLoadMore.value) {
                             viewModel.loadNextDiscoverPage()
                         }
                     }

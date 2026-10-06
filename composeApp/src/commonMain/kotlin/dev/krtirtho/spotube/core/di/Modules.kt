@@ -86,6 +86,8 @@ import dev.krtirtho.spotube.modules.shell.AppShellViewModel
 import dev.krtirtho.spotube.modules.shell.PlayerOptionsViewModel
 import dev.krtirtho.spotube.modules.shell.alternative_track.AlternativeTrackContentViewModel
 import dev.krtirtho.spotube.modules.shell.player_queue.PlayerQueueContentViewModel
+import dev.krtirtho.spotube.modules.welcome.WelcomeRepository
+import dev.krtirtho.spotube.modules.welcome.WelcomeViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.createdAtStart
@@ -140,6 +142,10 @@ val sharedModules = module {
     singleOf(::SettingsRepository) { bind<UserSettingsSource>() }
     viewModelOf(::SettingsViewModel) { bind<SettingsProvider>() }
     viewModelOf(::JamSettingsViewModel)
+
+    // Welcome / Onboarding
+    singleOf(::WelcomeRepository)
+    viewModelOf(::WelcomeViewModel)
 
     // Updates
     single { AppUpdateService(get()) } withOptions { createdAtStart() }

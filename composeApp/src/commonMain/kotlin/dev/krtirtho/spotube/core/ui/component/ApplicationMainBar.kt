@@ -47,5 +47,6 @@ expect fun ApplicationMainBar(
     title: @Composable () -> Unit = {},
     subtitle: @Composable () -> Unit = {},
     actions: @Composable (RowScope.() -> Unit) = {},
-    backButton: Boolean = true
+    backButton: Boolean = true,
+    transparent: Boolean = false,
 )

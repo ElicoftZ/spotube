@@ -202,8 +202,98 @@
     <string name="update_action_ignore">Ignore</string>
     <string name="update_action_update">Update</string>
     <string name="app_update_dialog_title">Spotube %1$s is available</string>
-    <string name="app_update_dialog_no_notes">See what\'s new in this release on the Spotube downloads page.</string>
+    <string name="app_update_dialog_no_notes">See what’s new in this release on the Spotube downloads page.</string>
     <string name="plugin_update_dialog_title">%1$s %2$s is available</string>
     <string name="plugin_update_dialog_current_version">Currently installed: %1$s</string>
-    <string name="plugin_update_dialog_no_notes">See what\'s new in this update from the plugin\'s page.</string>
+    <string name="plugin_update_dialog_no_notes">See what’s new in this update from the plugin’s page.</string>
+
+    <string name="welcome_skip">Skip</string>
+    <string name="welcome_next">Next</string>
+    <string name="welcome_back">Back</string>
+    <string name="welcome_get_started">Get Started</string>
+    <string name="welcome_app_name">Spotube</string>
+    <string name="welcome_brand_freedom">Music, without the strings.</string>
+    <string name="welcome_brand_quiet_description">An open-source player for a world of music.\nYours to explore. Yours to make your own.</string>
+    <string name="welcome_donate_quiet_title">Keep music free.</string>
+    <string name="welcome_donate_letter">Spotube is built by people, not a subscription business. If it becomes part of your everyday life, a little support helps us give it the care it deserves.\n\nThank you for making room for independent software.</string>
+    <string name="welcome_plugins_setup_guide">Start with a catalog plugin to find songs and playlists. Choose an audio plugin to play them. Lyrics and listening history are optional. Discover a plugin below, review its permissions, install it, then select it here.</string>
+    <string name="welcome_plugins_discover">Discover plugins</string>
+    <string name="welcome_plugins_sources">Your sources</string>
+    <string name="welcome_plugins_retry">Try again</string>
+    <string name="welcome_plugins_more">More plugins</string>
+    <string name="welcome_plugins_discovery_empty">No new plugins found. You can also install one from a link or a .smplug file above.</string>
+    <string name="welcome_plugins_discovery_error">Plugin discovery is unavailable right now. Try again, or install from a link or file.</string>
+    <string name="welcome_how_quiet_title">A familiar player. A different kind of freedom.</string>
+    <string name="welcome_how_quiet_description">Browse through your chosen catalog. Press play and your audio plugin finds the stream.\n\nYour device handles playback and caching. Add synced lyrics, save tracks for later, or listen together with Group Jam.</string>
+    <string name="welcome_demo_streaming">DEMONSTRATION</string>
+    <string name="welcome_demo_paused">PAUSED</string>
+    <string name="welcome_demo_pause_action">Pause demonstration</string>
+    <string name="welcome_demo_play_action">Play demonstration</string>
+
+    <!-- Page 1: branding -->
+    <string name="welcome_brand_tagline">Your music. Your sources. Your rules.</string>
+    <string name="welcome_brand_subtitle">A free, open-source music player built by a community that simply loves music.</string>
+    <string name="welcome_brand_chip_open_source">Open source</string>
+    <string name="welcome_brand_chip_no_ads">No ads</string>
+    <string name="welcome_brand_chip_no_tracking">No telemetry</string>
+    <string name="welcome_brand_chip_plugin_powered">Plugin powered</string>
+    <string name="welcome_lets_go">Let’s Go</string>
+
+    <!-- Page 2: donations -->
+    <string name="welcome_donate_eyebrow">Supporters keep us going</string>
+    <string name="welcome_donate_title">Built with passion. Kept alive by you.</string>
+    <string name="welcome_donate_message">Spotube is 100% free, libre, and open source — no ads, no subscriptions, no tracking. Every feature exists because people like you chose to help keep the code flowing.</string>
+    <string name="welcome_donate_patreon_title">Patreon</string>
+    <string name="welcome_donate_patreon_tag">Monthly Sponsor</string>
+    <string name="welcome_donate_patreon_subtitle">Support recurring development and infrastructure</string>
+    <string name="welcome_donate_bmac_title">Buy Me a Coffee</string>
+    <string name="welcome_donate_bmac_tag">One-Time Coffee</string>
+    <string name="welcome_donate_bmac_subtitle">Fuel a late-night coding session with a quick tip</string>
+    <string name="welcome_donate_opencollective_title">Open Collective</string>
+    <string name="welcome_donate_opencollective_tag">Community Fund</string>
+    <string name="welcome_donate_opencollective_subtitle">Transparent, community-governed financial backing</string>
+    <string name="welcome_donate_thanks">Thank you from the bottom of our hearts for believing in open music.</string>
+    <string name="welcome_donate_optional">Supporting is completely optional — Spotube stays free either way.</string>
+    <string name="welcome_donate_action">Sponsor</string>
+    <string name="welcome_donate_open_content_description">Open %1$s</string>
+
+    <!-- Page 3: plugins -->
+    <string name="welcome_plugins_eyebrow">Modular Architecture</string>
+    <string name="welcome_plugins_title">Choose where your music comes from.</string>
+    <string name="welcome_plugins_subtitle">Spotube separates catalog discovery, audio streaming, and synced lyrics. Configure your engines below or switch them anytime.</string>
+    <string name="welcome_plugins_metadata_title">Metadata Engine</string>
+    <string name="welcome_plugins_metadata_description">Powers music discovery, search, track listings, and playlists.</string>
+    <string name="welcome_plugins_audio_title">Audio Engine</string>
+    <string name="welcome_plugins_audio_description">Fetches and decodes the audio streams that play.</string>
+    <string name="welcome_plugins_lyrics_title">Lyrics Engine</string>
+    <string name="welcome_plugins_lyrics_description">Streams time-synced karaoke lyrics in real time.</string>
+    <string name="welcome_plugins_scrobble_title">Scrobble Engine</string>
+    <string name="welcome_plugins_scrobble_description">Records listening history to Last.fm or ListenBrainz.</string>
+    <string name="welcome_plugins_badge_active">Active</string>
+    <string name="welcome_plugins_badge_builtin">Built-in</string>
+    <string name="welcome_plugins_badge_ready">Ready</string>
+    <string name="welcome_plugins_badge_optional">Optional</string>
+    <string name="welcome_plugins_none_selected">Select an engine</string>
+    <string name="welcome_plugins_installed_section">Installed Engines</string>
+    <string name="welcome_plugins_set_default">Set as default</string>
+    <string name="welcome_plugins_builtin_note">NewPipe YouTube and LRCLib Lyrics are built-in and ready to stream out of the box.</string>
+    <string name="welcome_plugins_tip">Manage or add new community plugins anytime in Settings → Plugins.</string>
+
+    <!-- Page 4: how it works -->
+    <string name="welcome_how_eyebrow">Retro-Modern Architecture</string>
+    <string name="welcome_how_title">Pure Hi-Fi, zero middlemen</string>
+    <string name="welcome_how_subtitle">Here’s how Spotube orchestrates decentralized playback directly on your machine.</string>
+    <string name="welcome_how_status_badge">DIRECT PEER-TO-PEER • 256 KBPS OPUS</string>
+    <string name="welcome_how_mockup_title">Blue hour</string>
+    <string name="welcome_how_mockup_artist">Spotube · player demonstration</string>
+    <string name="welcome_how_mockup_lyric">A little music for the moments in between.</string>
+    <string name="welcome_how_step_search_title">1. Decentralized Discovery</string>
+    <string name="welcome_how_step_search_desc">Queries go straight to your chosen catalog plugin. Spotube never profiles your taste.</string>
+    <string name="welcome_how_step_stream_title">2. Direct Stream Resolution</string>
+    <string name="welcome_how_step_stream_desc">Audio streams directly from content servers to your machine. No proxy hops or remote data harvesting.</string>
+    <string name="welcome_how_step_playback_title">3. Local DSP &amp; Playback</string>
+    <string name="welcome_how_step_playback_desc">Decoded and cached locally with equalizer controls and optional offline download.</string>
+    <string name="welcome_how_step_lyrics_title">4. Synced Lyrics &amp; Jam</string>
+    <string name="welcome_how_step_lyrics_desc">Karaoke lyrics track the playback timestamp, with LAN remote control and Group Jam.</string>
+    <string name="welcome_how_footer">No middleman servers. Playback happens right on your device — private by design.</string>
 </resources>

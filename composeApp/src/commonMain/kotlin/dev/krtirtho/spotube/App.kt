@@ -48,6 +48,7 @@ import dev.krtirtho.spotube.modules.update.AppUpdateService
 import dev.krtirtho.spotube.modules.update.PluginUpdateDialog
 import dev.krtirtho.spotube.modules.update.PluginUpdateService
 import dev.krtirtho.spotube.modules.webview.WebViewScreen
+import dev.krtirtho.spotube.modules.welcome.WelcomeRepository
 import dev.krtirtho.spotube.resources.iconsax.Iconsax
 import dev.krtirtho.spotube.resources.iconsax.IconsaxCd
 import dev.krtirtho.spotube.resources.iconsax.IconsaxDirectboxReceive
@@ -140,10 +141,17 @@ fun App(
     val availableAppUpdate by appUpdateService.availableUpdate.collectAsStateWithLifecycle()
     val availablePluginUpdate by pluginUpdateService.availableUpdate.collectAsStateWithLifecycle()
 
+    val welcomeRepository: WelcomeRepository = koinInject()
+    val showOnboarding by welcomeRepository.shouldShowOnboarding.collectAsStateWithLifecycle()
+
+    // The app always renders the shell + NavDisplay; onboarding is just the start destination.
+    // When it is completed the destination flips to Home and the navigation state is rebuilt.
+    val startRoute = if (showOnboarding) Routes.Welcome else Routes.Home
+
     val navigationState = rememberNavigationState(
-        startRoute = Routes.Home, topLevelRoutes = TOP_LEVEL_ROUTES
+        startRoute = startRoute, topLevelRoutes = TOP_LEVEL_ROUTES
     )
-    val navigator = remember {
+    val navigator = remember(navigationState) {
         Navigator(navigationState)
     }
 
@@ -151,7 +159,8 @@ fun App(
         val baseUITheme = rememberBaseUITheme()
         CompositionLocalProvider(LocalBaseUITheme provides baseUITheme) {
             Box(modifier = Modifier.fillMaxSize()) {
-                val currentRoute = navigationState.backStacks[navigationState.topLevelRoute]?.last()
+                val currentRoute =
+                    navigationState.backStacks[navigationState.topLevelRoute]?.last()
 
                 Box(Modifier.fillMaxSize()) {
                     AppShell(navigator, navigationState) {

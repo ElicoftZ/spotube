@@ -87,6 +87,7 @@ sealed interface PluginUiState {
     data object Loading : PluginUiState
 
     data class Data(
+        val onboardingDiscover: Boolean = true,
         val plugins: List<PluginListItem>,
         val abilitySelections: List<AbilitySelection>,
         val pendingPlugin: PluginManager.PendingPlugin? = null,
@@ -118,6 +119,7 @@ private data class PluginManagerSnapshot(
 )
 
 private data class PluginScreenState(
+    val onboardingDiscover: Boolean = true,
     val urlInput: String = "",
     val urlError: UrlError? = null,
     val isLoadingUrl: Boolean = false,
@@ -239,6 +241,7 @@ class PluginViewModel(
         when (val state = snapshot.state) {
             is PluginManagerStates.Loading -> PluginUiState.Loading
             is PluginManagerStates.Data -> PluginUiState.Data(
+                onboardingDiscover = screen.onboardingDiscover,
                 plugins = state.plugins.map { plugin ->
                     PluginListItem(
                         plugin = plugin,
@@ -468,6 +471,10 @@ class PluginViewModel(
         pluginManager.setSelectedPlugin(ability, plugin)
     }
 
+    fun showOnboardingDiscovery(show: Boolean) {
+        _screenState.update { it.copy(onboardingDiscover = show) }
+    }
+
     fun removePlugin(plugin: PluginEntry) {
         viewModelScope.launch {
             runCatching {
@@ -510,6 +517,11 @@ class PluginViewModel(
             .mapNotNull { it.repository.takeIf { r -> r.isNotBlank() } }
             .toSet()
         return repos.filter { it.htmlUrl !in installedUrls }
+    }
+
+    fun retryDiscovery() {
+        if (_screenState.value.discover.isLoading) return
+        loadFirstDiscoverPage()
     }
 
     private fun loadFirstDiscoverPage() {
@@ -590,7 +602,8 @@ class PluginViewModel(
     }
 
     fun installPlugin(release: GitHubRelease, repoId: Long) {
-        val smplugUrl = release.assets.firstOrNull { it.name.endsWith(".smplug") }?.browserDownloadUrl
+        val smplugUrl =
+            release.assets.firstOrNull { it.name.endsWith(".smplug") }?.browserDownloadUrl
         if (smplugUrl != null) {
             installPluginFromUrl(smplugUrl, repoId)
         }

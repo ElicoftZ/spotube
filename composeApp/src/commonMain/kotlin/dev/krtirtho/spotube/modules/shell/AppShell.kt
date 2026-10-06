@@ -129,6 +129,13 @@ fun AppShell(
         }
     }
 
+    // Onboarding is a bootstrap, full-screen destination. It draws its own app bar (and thus
+    // the desktop window controls), so render it without the sidebar, players or bottom bar.
+    if (navigationState.topLevelRoute == Routes.Welcome) {
+        content()
+        return
+    }
+
     ConnectionRequestDialogHost()
     PlayDestinationPickerHost()
 

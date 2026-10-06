@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -29,12 +31,21 @@ actual fun ApplicationMainBar(
     title: @Composable (() -> Unit),
     subtitle: @Composable () -> Unit,
     actions: @Composable (RowScope.() -> Unit),
-    backButton: Boolean
+    backButton: Boolean,
+    transparent: Boolean,
 ) {
     return TopAppBar(
         title = title,
         subtitle = subtitle,
         actions = actions,
+        colors = if (transparent) {
+            TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                scrolledContainerColor = Color.Transparent,
+            )
+        } else {
+            TopAppBarDefaults.topAppBarColors()
+        },
         navigationIcon = {
             if (backButton) {
                 ApplicationBackButton()

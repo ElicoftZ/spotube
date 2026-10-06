@@ -26,7 +26,6 @@ import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
-import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
@@ -45,7 +44,9 @@ val TOP_LEVEL_ROUTES = setOf(
     Routes.Home,
     Routes.Search,
     Routes.Library,
-    Routes.Settings
+    Routes.Settings,
+    // Bootstrap destination: needs its own back stack when the app starts on it.
+    Routes.Welcome,
 )
 
 val serializersConfig = SavedStateConfiguration {
@@ -63,6 +64,7 @@ val serializersConfig = SavedStateConfiguration {
             subclass(Routes.Blacklist::class, Routes.Blacklist.serializer())
             subclass(Routes.Devices::class, Routes.Devices.serializer())
             subclass(Routes.Jam::class, Routes.Jam.serializer())
+            subclass(Routes.Welcome::class, Routes.Welcome.serializer())
         }
     }
 }
@@ -122,7 +124,6 @@ fun NavigationState.toEntries(
     val decoratedEntries = backStacks.mapValues { (_, stack) ->
         val decorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator<NavKey>(),
-            rememberViewModelStoreNavEntryDecorator()
         )
         rememberDecoratedNavEntries(
             backStack = stack,
