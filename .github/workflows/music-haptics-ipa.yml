@@ -15,8 +15,11 @@ jobs:
       contents: write
     env:
       CHANNEL: stable
-      # The CLI requires a DOTENV value; the haptics feature needs none.
-      DOTENV: ""
+      # envied demands these fields at codegen time even though scrobbling is
+      # an optional feature; dummies keep the build honest without secrets.
+      DOTENV: |
+        LASTFM_API_KEY=spotube-haptics
+        LASTFM_API_SECRET=spotube-haptics
     steps:
       - uses: actions/checkout@v4
 
