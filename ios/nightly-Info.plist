@@ -6,6 +6,8 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>MusicHapticsSupported</key>
+	<true/>
 	<key>CFBundleDisplayName</key>
 	<string>Spotube</string>
 	<key>CFBundleExecutable</key>
