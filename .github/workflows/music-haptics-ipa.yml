@@ -1,0 +1,64 @@
+name: Music Haptics IPA
+
+on:
+  push:
+    branches: [music-haptics]
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: "3.35.2"
+
+jobs:
+  build:
+    runs-on: macos-14
+    permissions:
+      contents: write
+    env:
+      CHANNEL: stable
+      # The CLI requires a DOTENV value; the haptics feature needs none.
+      DOTENV: ""
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2.18.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.2"
+
+      - name: Report toolchain
+        run: flutter --version
+
+      - name: Install dependencies
+        run: |
+          flutter pub get
+          dart cli/cli.dart install-dependencies --platform=ios --arch=all
+
+      # Without pipefail the zip step would swallow a failed flutter build.
+      - name: Build IPA
+        run: |
+          set -o pipefail
+          dart cli/cli.dart build --arch=all ios 2>&1 | tee build.log || {
+            echo "--- errors ---"
+            grep -E "error|Error|failed" build.log | sort -u | head -40
+            exit 1
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Spotube-MusicHaptics-ipa
+          path: Spotube-iOS.ipa
+          if-no-files-found: error
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="haptics-${{ github.run_number }}"
+          gh release create "$TAG" Spotube-iOS.ipa \
+            --title "Spotube + Music Haptics build ${{ github.run_number }}" \
+            --notes "Spotube with Music Haptics: each playing recording's ISRC is recovered from MusicBrainz and published to the Now Playing entry, so iOS (Settings → Accessibility → Music Haptics ON) renders Apple's authored haptic track. Requires a physical device. Install the IPA with LiveContainer." \
+            --latest

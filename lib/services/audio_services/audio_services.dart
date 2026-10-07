@@ -1,4 +1,5 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spotube/collections/env.dart';
@@ -12,6 +13,12 @@ import 'package:spotube/utils/platform.dart';
 class AudioServices with WidgetsBindingObserver {
   final MobileAudioService? mobile;
   final WindowsAudioService? smtc;
+
+  /// Hands each track change to the iOS runner, which recovers the recording's
+  /// ISRC and publishes it so iOS can render its authored Music Haptics track.
+  static const MethodChannel _musicHaptics = MethodChannel(
+    'oss.krtirtho.spotube.music_haptics',
+  );
 
   AudioServices(this.mobile, this.smtc) {
     WidgetsBinding.instance.addObserver(this);
@@ -58,6 +65,16 @@ class AudioServices with WidgetsBindingObserver {
       ),
       playable: true,
     ));
+
+    if (kIsIOS) {
+      _musicHaptics
+          .invokeMethod('trackChanged', {
+            'title': track.name,
+            'artist': track.artists.asString(),
+            'durationMs': track.durationMs,
+          })
+          .catchError((_) {});
+    }
   }
 
   void activateSession() {

@@ -13,6 +13,9 @@ import Flutter
     }
     
     GeneratedPluginRegistrant.register(with: self)
+    if let registrar = self.registrar(forPlugin: "MusicHapticsPlugin") {
+        MusicHapticsPlugin.register(with: registrar)
+    }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
