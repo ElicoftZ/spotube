@@ -13,8 +13,10 @@ import Flutter
     }
     
     GeneratedPluginRegistrant.register(with: self)
-    if let registrar = self.registrar(forPlugin: "MusicHapticsPlugin") {
+    if #available(iOS 18.0, *) {
+      if let registrar = self.registrar(forPlugin: "MusicHapticsPlugin") {
         MusicHapticsPlugin.register(with: registrar)
+      }
     }
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

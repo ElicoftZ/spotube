@@ -12,6 +12,11 @@ import MediaPlayer
 /// candidate the system has no haptic track for is never published, and a
 /// recording that matches nothing stays unpublished rather than risking a
 /// wrong recording's haptics.
+///
+/// Music Haptics shipped in iOS 18 while the app targets older systems, so the
+/// class is availability-gated; on earlier iOS the channel simply has no
+/// handler and the Dart calls no-op.
+@available(iOS 18.0, *)
 public class MusicHapticsPlugin: NSObject, FlutterPlugin {
     private static let channelName = "oss.krtirtho.spotube.music_haptics"
     private static let userAgent = "SpotubeMusicHaptics/1.0 (personal build; MusicBrainz compliant)"
